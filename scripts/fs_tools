@@ -1,0 +1,53 @@
+#!/bin/bash
+
+get_lists() {
+  local DIR=$1
+  BUILD_LISTS=();
+  for LIST in "$DIR/*.list"; do
+    local BL=$(basename ${LIST%.list});
+    if [[ ! -e $DIR/$BL.desc ]]; then
+      echo "$BL list have no description file"
+      continue
+    fi
+    BUILD_LISTS=("$BL" "${BUILD_LISTS[@]}")
+  done
+}
+
+create_dir() {
+  local DIR=$1
+  rm -rf $DIR
+  mkdir -p "$DIR" "$DIR/$CONFIG_DIR"
+  mkdir -p "$DIR"/{etc,tmp}
+  mkdir -p "$DIR"/var/mpkg/{packages,scripts,configs,backup}
+  mkdir -p "$DIR"/{root,home,proc,sys,dev,mnt,media}
+  mkdir -p "$DIR"/usr/local/{bin,lib,sbin,share,doc}
+  mkdir -p "$DIR"/etc/init.d
+  mkdir -p "$DIR"/etc/rc.d
+
+  chmod 1777 "$DIR"/tmp
+  # This is for KDE:
+  ln -s ../tmp "$DIR"/var/tmp
+  # For malformed packages
+  n -s ../init.d "$DIR"/etc/rc.d/init.d
+}
+
+install_to() {
+  local DIR=$1 NODE=$2
+  local LIST="$DIR/$CONFIG_DIR/node.list"
+  echo "Installing $NODE to $DIR"
+  # Copy files
+  cp "$LISTS_DIR"/$NODE.list "$LIST"
+  cp "$FILES_DIR"/mpkg.xml.system "$DIR"/etc/mpkg.xml.system
+  sed -e s#NODE#$NODE#g -e s#ARCH#$ARCH#g \
+    "$FILES_DIR"/mpkg.xml > "$DIR"/etc/mpkg.xml
+  cp "$FILES_DIR"/packages.db "$DIR"/var/mpkg/
+  local ARGS="--conf=\"$DIR\"/etc/mpkg.xml --sysroot=\"$DIR\""
+  mpkg-add_rep $ARGS $REPO_DIR
+  # Installing
+  mpkg-update $ARGS || exit 1
+  mpkg-installfromlist -v -y -m $ARGS "$LIST" || exit 1
+  # Move config
+  mv "$DIR"/etc/mpkg.xml{.system,}
+  echo "Installation complete"
+}
+

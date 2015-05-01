@@ -1,0 +1,42 @@
+#!/bin/bash
+
+source $SCRIPTS_DIR/chroot_tools
+
+ssh_setup() {
+  local DIR=$1 PORT=$2
+  echo <<END > "$DIR/etc/sshd_config"
+Port $PORT
+AuthorizedKeysFile      .ssh/authorized_keys
+UsePrivilegeSeparation sandbox
+END
+  cp "$HOME"/.ssh/id_rsa.pub "$DIR"/root/.ssh/authorized_keys
+  echo $PORT > "$DIR/$CONFIG_DIR/ssh_port"
+  softfile=/lib/rc/init.d/softlevel
+  if [ "$ARCH" = "x86_64" ]; then
+      softfile=/lib64/rc/init.d/softlevel
+  fi
+  chroot_do $DIR "rc-update -u ; touch $softfile ; rc-service sshd start"
+}
+
+ssh_start() {
+  local DIR=$1
+  PORT=$(echo `cat $DIR/$CONFIG_DIR/ssh_port`)
+  if [[ -z $PORT ]]; then
+    echo "ssh is not ready in $DIR"
+    exit 1
+  fi
+  if [[ -f "$DIR"/usr/sbin/sshd ]]; then
+    echo "Starting sshd in $DIR on port $PORT"
+    chroot_do $DIR /usr/sbin/sshd
+  fi
+}
+
+ssh_connect() {
+  local DIR=$1
+  PORT=$(echo `cat $DIR/$CONFIG_DIR/ssh_port`)
+  if [[ -z $PORT ]]; then
+    echo "ssh is not ready in $DIR"
+    exit 1
+  fi
+  ssh root@localhost -p $PORT
+}

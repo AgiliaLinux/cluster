@@ -1,0 +1,9 @@
+# fstab template for shares
+#HOST=192.168.122.1
+#PATH=/home/agilia
+# Shares
+@HOST@:@PATH@/repository    /mnt/repository    nfs     rw,sync,hard,intr,rsize=4096,wsize=4096  0 0
+@HOST@:@PATH@/abuilds       /mnt/abuilds       nfs     rw,sync,hard,intr,rsize=4096,wsize=4096  0 0
+@HOST@:@PATH@/install-lists /mnt/install-lists nfs     rw,sync,hard,intr,rsize=4096,wsize=40960 0 0
+@HOST@:@PATH@/cluster       /mnt/cluster       nfs     rw,sync,hard,intr,rsize=4096,wsize=40960 0 0
+

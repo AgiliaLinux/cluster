@@ -1,0 +1,97 @@
+#!/bin/bash
+
+BASE_DIR=$(cd "`dirname "${BASH_SOURCE[0]}"`" && pwd)
+SCRIPTS_DIR=$BASE_DIR/scripts
+FILES_DIR=$BASE_DIR/files
+# Base variables
+CLUSTER_DIR=${CLUSTER_DIR:-/media/cluster}
+CONFIG_DIR=${CONFIG_DIR:-/etc/agilia}
+REPO_DIR=${REPO_DIR:-/mnt/repository}
+LISTS_DIR=${INSTALL_LISTS:-/mnt/install_lists}
+ARCH=${BUILD_ARCH}
+SSH_PORT=4501
+
+source $SCRIPTS_DIR/chroot_tools
+source $SCRIPTS_DIR/fs_tools
+source $SCRIPTS_DIR/ssh_tools
+
+if [ "$ARCH" = "" -o "$ARCH" = "auto" ] ; then
+  if [ "`uname -m`" = "x86_64" ] ; then
+    ARCH=x86_64
+  else
+    ARCH=x86
+  fi
+fi
+
+install_one() {
+  local DIR=$1 LIST=$2 PORT=$3
+  create_dir "$DIR"
+  chroot_mount "$DIR"
+  install_to "$DIR" "$LIST"
+  ssh_setup "$DIR" "$PORT"
+  # chroot_do $DIR su - -c ./startup
+}
+
+install_all() {
+  get_lists "$LISTS_DIR"
+  for LIST in $BUILD_LISTS; do
+    local BD="$CLUSTER_DIR/$LIST"
+    SSH_PORT=$((SSH_PORT+1))
+    install_one $BD $LIST $PORT
+  done
+  #echo 131072 > /proc/sys/fs/file-max
+  echo <<END > /etc/local.d/cluster.start
+#!/bin/bash
+$BASE_DIR/cluster start
+END
+}
+
+start_one() {
+  local DIR=$1 NODE=$2
+  chroot_mount "$DIR"
+  start_sshd "$DIR"
+}
+
+start_all() {
+  get_lists "$LISTS_DIR"
+  for LIST in $BUILD_LISTS; do
+    local BD="$CLUSTER_DIR/$LIST"
+    start_one $BD $LIST
+  done
+}
+
+ssh_to() {
+  local NODE=$1
+  DIR="$CLUSTER_DIR/$NODE"
+  if [ ! -d "$DIR" ]; then
+    echo "No such node $NODE"
+  fi
+  ssh_connect $DIR
+}
+
+case $key in
+  install)
+    shift
+    install_all
+  ;;
+  install_one)
+    shift
+    install_one "$@"
+  ;;
+  start)
+    shift
+    start_all
+  ;;
+  start_one)
+    shift
+    start_one "$@"
+  ;;
+  ssh)
+    shift
+    ssh_to "$@"
+  ;;
+  *)
+    echo "Unknown option"
+    exit 1;
+  ;;
+esac
