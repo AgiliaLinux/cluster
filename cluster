@@ -69,7 +69,7 @@ ssh_to() {
   ssh_connect $DIR
 }
 
-case $key in
+case $1 in
   install)
     shift
     install_all
