@@ -3,7 +3,7 @@
 get_lists() {
   local DIR=$1
   BUILD_LISTS=();
-  for LIST in "$DIR/*.list"; do
+  for LIST in "$DIR"/*.list; do
     local BL=$(basename ${LIST%.list});
     if [[ ! -e $DIR/$BL.desc ]]; then
       echo "$BL list have no description file"
