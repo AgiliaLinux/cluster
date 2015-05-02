@@ -52,7 +52,7 @@ fs_install() {
   sed -e s#NODE#$NODE#g -e s#ARCH#$ARCH#g \
     "$FILES_DIR"/mpkg.xml > "$DIR"/etc/mpkg.xml
   cp "$FILES_DIR"/packages.db "$DIR"/var/mpkg/
-  local ARGS="--conf=\"$DIR\"/etc/mpkg.xml --sysroot=\"$DIR\""
+  local ARGS="--conf=\"$DIR/etc/mpkg.xml\" --sysroot=\"$DIR\""
   mpkg-add_rep $ARGS $REPO_DIR
   # Installing
   mpkg-update $ARGS || exit 1
