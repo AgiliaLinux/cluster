@@ -27,11 +27,11 @@ REPO_DIR="${REPO_DIR}/${ARCH}"
 # Returns also 0 if array is empty
 in_array() {
   local VAL=$1 ARR=("${@:2}")
-  if [ ${#ARR[@]} -eq 0 ]; then
+  if [[ ${#ARR[@]} -eq 0 ]]; then
     return 0
   fi
   local EL
-  for EL in "$ARR"; do [[ "$e" = "$VAL" ]] && return 0; done
+  for EL in "${ARR[@]}"; do [[ "$EL" = "$VAL" ]] && return 0; done
   return 1
 }
 
@@ -44,11 +44,9 @@ uninstall() {
 install() {
   local CONFIGS=("$@")
   fs_get_lists "$LISTS_DIR"
-  for NODE in $BUILD_LISTS; do
+  for NODE in "${BUILD_LISTS[@]}"; do
     SSH_PORT=$((SSH_PORT+1))
-    if [ in_array "$NODE" "${CONFIGS[@]}" ] ; then
-      do_install $NODE $PORT
-    fi
+    in_array "$NODE" "${CONFIGS[@]}" && do_install $NODE $PORT
   done
   #echo 131072 > /proc/sys/fs/file-max
   echo <<END > /etc/local.d/cluster.start
@@ -78,10 +76,8 @@ do_install() {
 start_all() {
   local CONFIGS=("$@")
   fs_get_lists "$LISTS_DIR"
-  for NODE in $BUILD_LISTS; do
-    if [ in_array "$NODE" "${CONFIGS[@]}" ] ; then
-      do_start $NODE
-    fi
+  for NODE in "${BUILD_LISTS[@]}"; do
+    in_array "$NODE" "${CONFIGS[@]}" && do_start $NODE
   done
 }
 
