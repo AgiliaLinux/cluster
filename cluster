@@ -25,15 +25,15 @@ fi
 
 install_one() {
   local DIR=$1 LIST=$2 PORT=$3
-  create_dir "$DIR"
+  fs_create_dir "$DIR"
   chroot_mount "$DIR"
-  install_to "$DIR" "$LIST"
+  fs_install_to "$DIR" "$LIST"
   ssh_setup "$DIR" "$PORT"
   # chroot_do $DIR su - -c ./startup
 }
 
 install_all() {
-  get_lists "$LISTS_DIR"
+  fs_get_lists "$LISTS_DIR"
   trap 'exit' ERR
   for LIST in $BUILD_LISTS; do
     local BD="$CLUSTER_DIR/$LIST"
@@ -50,11 +50,11 @@ END
 start_one() {
   local DIR=$1 NODE=$2
   chroot_mount "$DIR"
-  start_sshd "$DIR"
+  ssh_start "$DIR"
 }
 
 start_all() {
-  get_lists "$LISTS_DIR"
+  fs_get_lists "$LISTS_DIR"
   for LIST in $BUILD_LISTS; do
     local BD="$CLUSTER_DIR/$LIST"
     start_one $BD $LIST

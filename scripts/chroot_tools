@@ -49,7 +49,6 @@ chroot_mount() {
   chroot_basic_mount $DIR
   chroot_build_mount $DIR
   chroot_add_resolv_conf $DIR
-  fs_save_mounts "$DIR"
 }
 
 chroot_do() {

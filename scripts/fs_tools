@@ -1,9 +1,6 @@
 #!/bin/bash
 
-MOUNTS_STATE_FILE=${MOUNTS_STATE_FILE:-active_mounts}
-ACTIVE_MOUNTS=()
-
-get_lists() {
+fs_get_lists() {
   local DIR=$1
   BUILD_LISTS=();
   for LIST in "$DIR"/*.list; do
@@ -17,38 +14,16 @@ get_lists() {
 }
 
 fs_add_mount() {
-  mount "$@" && ACTIVE_MOUNTS=("$2" "${ACTIVE_MOUNTS[@]}")
-}
-
-fs_save_mounts() {
-  local DIR=$1
-  local FILE="$DIR/$CONFIG_DIR/$MOUNTS_STATE_FILE"
-  fs_read_mounts $DIR
-  echo "${ACTIVE_MOUNTS[@]}" > $FILE
-}
-
-fs_read_mounts() {
-  local DIR=$1
-  local FILE="$DIR/$CONFIG_DIR/$MOUNTS_STATE_FILE"
-  local mounts=("${ACTIVE_MOUNTS[@]}")
-  ACTIVE_MOUNTS=($(cat $FILE 2>/dev/null))
-  ACTIVE_MOUNTS=("$mounts" "${ACTIVE_MOUNTS[@]}")
-  ACTIVE_MOUNTS=$(echo "${ACTIVE_MOUNTS[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+  mount "$@"
 }
 
 fs_umount_dir() {
   local DIR=$1
-  local FILE="$DIR/$CONFIG_DIR/$MOUNTS_STATE_FILE"
   local MOUNTS=$(mount | awk '{ print $3; }' | grep "$DIR" | tac)
-  umount "${MOUNTS[@]}"
-  fs_read_mounts $DIR
-  shopt -s extglob
-  ACTIVE_MOUNTS=${ACTIVE_MOUNTS//${DIR}*([^ ])?( )}
-  echo "${ACTIVE_MOUNTS[@]}" > $FILE
-  shopt -u extglob
+  umount ${MOUNTS[@]}
 }
 
-create_dir() {
+fs_create() {
   local DIR=$1
   fs_umount_dir $DIR
   rm -rf $DIR
@@ -67,7 +42,7 @@ create_dir() {
   n -s ../init.d "$DIR"/etc/rc.d/init.d
 }
 
-install_to() {
+fs_install() {
   local DIR=$1 NODE=$2
   local LIST="$DIR/$CONFIG_DIR/node.list"
   echo "Installing $NODE to $DIR"
