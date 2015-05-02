@@ -34,6 +34,7 @@ install_one() {
 
 install_all() {
   get_lists "$LISTS_DIR"
+  trap 'exit' ERR
   for LIST in $BUILD_LISTS; do
     local BD="$CLUSTER_DIR/$LIST"
     SSH_PORT=$((SSH_PORT+1))
