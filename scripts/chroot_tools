@@ -40,7 +40,8 @@ chroot_basic_mount() {
 chroot_build_mount() {
   local DIR=$1
   for req in $BUILD_REQS; do
-    fs_add_mount $req "$DIR/$req" -o bind
+    mkdir -p "${DIR}${req}"
+    fs_add_mount $req "${DIR}${req}" -o bind
   done
 }
 

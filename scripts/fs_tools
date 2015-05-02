@@ -28,7 +28,7 @@ fs_create() {
   fs_umount_dir $DIR
   rm -rf $DIR
   mkdir -p "$DIR" "$DIR/$CONFIG_DIR"
-  mkdir -p "$DIR"/{etc,tmp}
+  mkdir -p "$DIR"/{etc,tmp,run}
   mkdir -p "$DIR"/var/mpkg/{packages,scripts,configs,backup}
   mkdir -p "$DIR"/{root,home,proc,sys,dev,mnt,media}
   mkdir -p "$DIR"/usr/local/{bin,lib,sbin,share,doc}
@@ -39,7 +39,7 @@ fs_create() {
   # This is for KDE:
   ln -s ../tmp "$DIR"/var/tmp
   # For malformed packages
-  n -s ../init.d "$DIR"/etc/rc.d/init.d
+  ln -s ../init.d "$DIR"/etc/rc.d/init.d
 }
 
 fs_install() {
