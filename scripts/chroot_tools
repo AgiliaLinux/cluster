@@ -23,7 +23,7 @@ chroot_add_resolv_conf() {
     fi
   fi
 
-  fs_add_mount /etc/resolv.conf "$resolv_conf" --bind
+  fs_add_mount /etc/resolv.conf "$resolv_conf" -o bind
 }
 
 chroot_basic_mount() {
