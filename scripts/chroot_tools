@@ -1,11 +1,7 @@
 #!/bin/bash
 
 BUILD_REQS=('/mnt/abuilds /mnt/repository /mnt/install-lists')
-CHROOT_STATE_FILE=${CHROOT_STATE_FILE:-chroot_mounts}
-
-chroot_add_mount() {
-  mount "$@" && CHROOT_ACTIVE_MOUNTS=("$2" "${CHROOT_ACTIVE_MOUNTS[@]}")
-}
+source $SCRIPTS_DIR/fs_tools
 
 chroot_add_resolv_conf() {
   local chrootdir=$1 resolv_conf=$1/etc/resolv.conf
@@ -27,35 +23,33 @@ chroot_add_resolv_conf() {
     fi
   fi
 
-  chroot_add_mount /etc/resolv.conf "$resolv_conf" --bind
+  fs_add_mount /etc/resolv.conf "$resolv_conf" --bind
 }
 
 chroot_basic_mount() {
-  local dir=$1
-  CHROOT_ACTIVE_MOUNTS=()
-
-  chroot_add_mount proc "$dir/proc" -t proc -o nosuid,noexec,nodev
-  chroot_add_mount sys "$dir/sys" -t sysfs -o nosuid,noexec,nodev,ro
-  chroot_add_mount udev "$dir/dev" -t devtmpfs -o mode=0755,nosuid
-  chroot_add_mount devpts "$dir/dev/pts" -t devpts -o mode=0620,gid=5,nosuid,noexec
-  chroot_add_mount shm "$dir/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev
-  chroot_add_mount run "$dir/run" -t tmpfs -o nosuid,nodev,mode=0755
-  chroot_add_mount tmp "$dir/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid
+  local DIR=$1
+  fs_add_mount proc "$DIR/proc" -t proc -o nosuid,noexec,nodev
+  fs_add_mount sys "$DIR/sys" -t sysfs -o nosuid,noexec,nodev,ro
+  fs_add_mount udev "$DIR/dev" -t devtmpfs -o mode=0755,nosuid
+  fs_add_mount devpts "$DIR/dev/pts" -t devpts -o mode=0620,gid=5,nosuid,noexec
+  fs_add_mount shm "$DIR/dev/shm" -t tmpfs -o mode=1777,nosuid,nodev
+  fs_add_mount run "$DIR/run" -t tmpfs -o nosuid,nodev,mode=0755
+  fs_add_mount tmp "$DIR/tmp" -t tmpfs -o mode=1777,strictatime,nodev,nosuid
 }
 
 chroot_build_mount() {
   local DIR=$1
   for req in $BUILD_REQS; do
-    chroot_add_mount $req "$DIR/$req" -o bind
+    fs_add_mount $req "$DIR/$req" -o bind
   done
 }
 
 chroot_mount() {
   local DIR=$1
   chroot_basic_mount $DIR
-  chroot_build_mount $dir
+  chroot_build_mount $DIR
   chroot_add_resolv_conf $DIR
-  echo $CHROOT_ACTIVE_MOUNTS > "$DIR/$CONFIG_DIR/$CHROOT_STATE_FILE"
+  fs_save_mounts "$DIR"
 }
 
 chroot_do() {
