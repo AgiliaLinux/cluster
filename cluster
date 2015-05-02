@@ -22,6 +22,7 @@ if [ "$ARCH" = "" -o "$ARCH" = "auto" ] ; then
     ARCH=x86
   fi
 fi
+REPO_DIR="${REPO_DIR}/${ARCH}"
 
 install_one() {
   local DIR=$1 LIST=$2 PORT=$3
