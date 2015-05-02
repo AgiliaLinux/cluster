@@ -35,13 +35,13 @@ in_array() {
   return 1
 }
 
-uninstall() {
+uninstall_all() {
   local NODE=$1
   local DIR="$CLUSTER_DIR/$NODE"
   fs_delete $DIR
 }
 
-install() {
+install_all() {
   local CONFIGS=("$@")
   fs_get_lists "$LISTS_DIR"
   for NODE in "${BUILD_LISTS[@]}"; do
@@ -103,11 +103,11 @@ ssh_to() {
 case $1 in
   install)
     shift
-    install "$@"
+    install_all "$@"
   ;;
   uninstall)
     shift
-    uninstall "$@"
+    uninstall_all "$@"
   ;;
   start)
     shift
