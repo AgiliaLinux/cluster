@@ -20,7 +20,7 @@ fs_add_mount() {
 fs_umount_dir() {
   local DIR=$1
   local MOUNTS=$(mount | awk '{ print $3; }' | grep "$DIR" | tac)
-  if [ ${#MOUNTS[@]} -ne 0 ]; then
+  if [[ "${MOUNTS[*]}" != "" ]]; then
     umount ${MOUNTS[@]}
   fi
 }
