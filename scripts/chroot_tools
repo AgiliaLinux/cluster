@@ -16,13 +16,11 @@ chroot_add_resolv_conf() {
     else
       resolv_conf=$DIR/etc/$resolv_conf
     fi
-
-    # ensure file exists to bind mount over
-    if [[ ! -f $resolv_conf ]]; then
-      install -Dm644 /dev/null "$resolv_conf" || return 1
-    fi
   fi
-
+  # ensure file exists to bind mount over
+  if [[ ! -f $resolv_conf ]]; then
+    install -Dm644 /dev/null "$resolv_conf" || return 1
+  fi
   fs_add_mount /etc/resolv.conf "$resolv_conf" -o bind
 }
 

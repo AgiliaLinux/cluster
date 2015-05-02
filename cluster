@@ -25,12 +25,14 @@ fi
 REPO_DIR="${REPO_DIR}/${ARCH}"
 
 install_one() {
-  local DIR=$1 LIST=$2 PORT=$3
+  local DIR=$1 NODE=$2 PORT=$3
+  echo "Installing $NODE"
   fs_create "$DIR"
   chroot_mount "$DIR"
-  fs_install "$DIR" "$LIST"
+  fs_install "$DIR"
   ssh_setup "$DIR" "$PORT"
   # chroot_do $DIR su - -c ./startup
+  echo "Done"
 }
 
 install_all() {
@@ -50,8 +52,10 @@ END
 
 start_one() {
   local DIR=$1 NODE=$2
+  echo "Starting $NODE"
   chroot_mount "$DIR"
   ssh_start "$DIR"
+  echo "Done"
 }
 
 start_all() {
