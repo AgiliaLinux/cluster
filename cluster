@@ -24,13 +24,48 @@ if [ "$ARCH" = "" -o "$ARCH" = "auto" ] ; then
 fi
 REPO_DIR="${REPO_DIR}/${ARCH}"
 
-install_one() {
-  local DIR=$1 NODE=$2 PORT=$3
-  if [ ! -f "$CLUSTER_DIR/${NODE}.list" ]; then
+# Returns also 0 if array is empty
+in_array() {
+  local VAL=$1 ARR=("${@:2}")
+  if [ ${#ARR[@]} -eq 0 ]; then
+    return 0
+  fi
+  local EL
+  for EL in "$ARR"; do [[ "$e" = "$VAL" ]] && return 0; done
+  return 1
+}
+
+uninstall() {
+  local NODE=$1
+  local DIR="$CLUSTER_DIR/$NODE"
+  fs_delete $DIR
+}
+
+install() {
+  local CONFIGS=("$@")
+  fs_get_lists "$LISTS_DIR"
+  for NODE in $BUILD_LISTS; do
+    SSH_PORT=$((SSH_PORT+1))
+    if [ in_array "$NODE" "${CONFIGS[@]}" ] ; then
+      do_install $NODE $PORT
+    fi
+  done
+  #echo 131072 > /proc/sys/fs/file-max
+  echo <<END > /etc/local.d/cluster.start
+#!/bin/bash
+$BASE_DIR/cluster start
+END
+}
+
+do_install() {
+  local NODE=$2 PORT=$3
+  local DIR="$CLUSTER_DIR/$NODE"
+  if [ ! -f "$LISTS_DIR/${NODE}.list" ]; then
       echo "Wrong node name $NODE"
       exit 1
   fi
   trap 'exit' ERR
+  fs_delete "$DIR"
   echo "Initializing $NODE"
   fs_create "$DIR"
   chroot_mount "$DIR"
@@ -40,22 +75,19 @@ install_one() {
   echo "Done"
 }
 
-install_all() {
+start_all() {
+  local CONFIGS=("$@")
   fs_get_lists "$LISTS_DIR"
-  for LIST in $BUILD_LISTS; do
-    local BD="$CLUSTER_DIR/$LIST"
-    SSH_PORT=$((SSH_PORT+1))
-    install_one $BD $LIST $PORT
+  for NODE in $BUILD_LISTS; do
+    if [ in_array "$NODE" "${CONFIGS[@]}" ] ; then
+      do_start $NODE
+    fi
   done
-  #echo 131072 > /proc/sys/fs/file-max
-  echo <<END > /etc/local.d/cluster.start
-#!/bin/bash
-$BASE_DIR/cluster start
-END
 }
 
-start_one() {
-  local DIR=$1 NODE=$2
+do_start() {
+  local NODE=$1
+  local DIR="$CLUSTER_DIR/$NODE"
   echo "Starting $NODE"
   trap 'exit' ERR
   chroot_mount "$DIR"
@@ -63,39 +95,27 @@ start_one() {
   echo "Done"
 }
 
-start_all() {
-  fs_get_lists "$LISTS_DIR"
-  for LIST in $BUILD_LISTS; do
-    local BD="$CLUSTER_DIR/$LIST"
-    start_one $BD $LIST
-  done
-}
-
 ssh_to() {
   local NODE=$1
-  DIR="$CLUSTER_DIR/$NODE"
+  local DIR="$CLUSTER_DIR/$NODE"
   if [ ! -d "$DIR" ]; then
     echo "No such node $NODE"
   fi
-  ssh_connect $DIR
+  ssh_connect "$DIR"
 }
 
 case $1 in
   install)
     shift
-    install_all
+    install "$@"
   ;;
-  install_one)
+  uninstall)
     shift
-    install_one "$@"
+    uninstall "$@"
   ;;
   start)
     shift
-    start_all
-  ;;
-  start_one)
-    shift
-    start_one "$@"
+    start_all "$@"
   ;;
   ssh)
     shift

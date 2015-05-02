@@ -20,13 +20,19 @@ fs_add_mount() {
 fs_umount_dir() {
   local DIR=$1
   local MOUNTS=$(mount | awk '{ print $3; }' | grep "$DIR" | tac)
-  umount ${MOUNTS[@]}
+  if [ ${#MOUNTS[@]} -ne 0 ]; then
+    umount ${MOUNTS[@]}
+  fi
+}
+
+fs_delete() {
+  local DIR=$1
+  fs_umount_dir $DIR
+  rm -rf $DIR 
 }
 
 fs_create() {
   local DIR=$1
-  fs_umount_dir $DIR
-  rm -rf $DIR
   mkdir -p "$DIR" "$DIR/$CONFIG_DIR"
   mkdir -p "$DIR"/{etc,tmp,run}
   mkdir -p "$DIR"/var/mpkg/{packages,scripts,configs,backup}

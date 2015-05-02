@@ -45,6 +45,7 @@ chroot_build_mount() {
 
 chroot_mount() {
   local DIR=$1
+  fs_umount_dir $DIR
   chroot_basic_mount $DIR
   chroot_build_mount $DIR
   chroot_add_resolv_conf $DIR
