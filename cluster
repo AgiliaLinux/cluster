@@ -46,7 +46,7 @@ install() {
   fs_get_lists "$LISTS_DIR"
   for NODE in "${BUILD_LISTS[@]}"; do
     SSH_PORT=$((SSH_PORT+1))
-    in_array "$NODE" "${CONFIGS[@]}" && do_install $NODE $PORT
+    in_array "$NODE" "${CONFIGS[@]}" && do_install $NODE $SSH_PORT
   done
   #echo 131072 > /proc/sys/fs/file-max
   echo <<END > /etc/local.d/cluster.start
@@ -56,7 +56,7 @@ END
 }
 
 do_install() {
-  local NODE=$2 PORT=$3
+  local NODE=$1 PORT=$2
   local DIR="$CLUSTER_DIR/$NODE"
   if [ ! -f "$LISTS_DIR/${NODE}.list" ]; then
       echo "Wrong node name $NODE"
