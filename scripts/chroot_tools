@@ -4,17 +4,17 @@ BUILD_REQS=('/mnt/abuilds /mnt/repository /mnt/install-lists')
 source $SCRIPTS_DIR/fs_tools
 
 chroot_add_resolv_conf() {
-  local chrootdir=$1 resolv_conf=$1/etc/resolv.conf
+  local DIR=$1 resolv_conf=$1/etc/resolv.conf
 
   # Handle resolv.conf as a symlink to somewhere else.
-  if [[ -L "$chrootdir/etc/resolv.conf" ]]; then
+  if [[ -L "$DIR/etc/resolv.conf" ]]; then
     # readlink(1) should always give us *something* since we know at this point
     # it's a symlink. For simplicity, ignore the case of nested symlinks.
-    resolv_conf=$(readlink "$chrootdir/etc/resolv.conf")
+    resolv_conf=$(readlink "$DIR/etc/resolv.conf")
     if [[ $resolv_conf = /* ]]; then
-      resolv_conf=$chrootdir$resolv_conf
+      resolv_conf=$DIR$resolv_conf
     else
-      resolv_conf=$chrootdir/etc/$resolv_conf
+      resolv_conf=$DIR/etc/$resolv_conf
     fi
 
     # ensure file exists to bind mount over
