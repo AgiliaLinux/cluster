@@ -43,9 +43,9 @@ fs_create() {
 }
 
 fs_install() {
-  local DIR=$1
+  local DIR=$1 NODE=$2
   local LIST="$DIR/$CONFIG_DIR/node.list"
-  echo "Installing to $DIR"
+  echo "Installing $NODE to $DIR"
   # Copy files
   cp "$LISTS_DIR"/$NODE.list "$LIST"
   cp "$FILES_DIR"/mpkg.xml.system "$DIR"/etc/mpkg.xml.system

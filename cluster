@@ -26,10 +26,15 @@ REPO_DIR="${REPO_DIR}/${ARCH}"
 
 install_one() {
   local DIR=$1 NODE=$2 PORT=$3
-  echo "Installing $NODE"
+  if [ ! -f "$CLUSTER_DIR/${NODE}.list" ]; then
+      echo "Wrong node name $NODE"
+      exit 1
+  fi
+  trap 'exit' ERR
+  echo "Initializing $NODE"
   fs_create "$DIR"
   chroot_mount "$DIR"
-  fs_install "$DIR"
+  fs_install "$DIR" "$NODE"
   ssh_setup "$DIR" "$PORT"
   # chroot_do $DIR su - -c ./startup
   echo "Done"
@@ -37,7 +42,6 @@ install_one() {
 
 install_all() {
   fs_get_lists "$LISTS_DIR"
-  trap 'exit' ERR
   for LIST in $BUILD_LISTS; do
     local BD="$CLUSTER_DIR/$LIST"
     SSH_PORT=$((SSH_PORT+1))
@@ -53,6 +57,7 @@ END
 start_one() {
   local DIR=$1 NODE=$2
   echo "Starting $NODE"
+  trap 'exit' ERR
   chroot_mount "$DIR"
   ssh_start "$DIR"
   echo "Done"
